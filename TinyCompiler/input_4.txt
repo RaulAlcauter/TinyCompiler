@@ -1,0 +1,9 @@
+ent x;
+bool b;
+ent v[cinco];
+
+porfavor x = uno;
+porfavor b = verdadero;
+
+porfavor v[uno] = x;
+porfavor v[dos] = b;

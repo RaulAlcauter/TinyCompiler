@@ -1,0 +1,6 @@
+ent x;
+ent y;
+bool b;
+
+porfavor y = dos;
+porfavor b = (x == y);

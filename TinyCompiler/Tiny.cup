@@ -1,0 +1,128 @@
+package constructorast;
+
+import java_cup.runtime.*;
+import alex.AnalizadorLexicoTiny;
+import errors.GestionErroresTiny;
+import ast.*;
+import java.util.LinkedList;
+
+scan with {: return getScanner().next_token(); :};
+
+parser code {:
+  private GestionErroresTiny errores;
+
+  public void syntax_error(Symbol token) {
+    errores.errorSintactico(token);
+  }
+:};
+
+init with {:
+  errores = new GestionErroresTiny();
+  AnalizadorLexicoTiny alex = (AnalizadorLexicoTiny) getScanner();
+  alex.fijaGestionErrores(errores);
+:};
+
+terminal IF, ELSE, WHILE;
+terminal TIPO_ENT, TIPO_BOOL;
+terminal TRUE, FALSE;
+terminal MAS, MENOS, MUL;
+terminal IGUAL, IGUALIGUAL, MAYOR, MENOR;
+terminal PUNTOCOMA;
+terminal PA, PC, CA, CC, LA, LC;
+terminal PORFAVOR;
+terminal ENT;
+terminal IDEN;
+
+non terminal LinkedList<Instruccion> Programa, ListaInst, Bloque;
+non terminal Instruccion Inst, Decl, Asig, Cond, Bucle;
+non terminal E Exp;
+non terminal String Numero;
+
+precedence left IGUALIGUAL;
+precedence left MAYOR, MENOR;
+precedence left MAS, MENOS;
+precedence left MUL;
+
+Programa ::= ListaInst:l
+  {: RESULT = l; :}
+;
+
+ListaInst ::= ListaInst:l Inst:i
+  {: l.add(i); RESULT = l; :}
+|
+  {: RESULT = new LinkedList<Instruccion>(); :}
+;
+
+Inst ::= Decl:d
+  {: RESULT = d; :}
+| Asig:a
+  {: RESULT = a; :}
+| Cond:c
+  {: RESULT = c; :}
+| Bucle:b
+  {: RESULT = b; :}
+;
+
+Bloque ::= LA ListaInst:l LC
+  {: RESULT = l; :}
+;
+
+Decl ::= TIPO_ENT IDEN:id PUNTOCOMA
+  {: RESULT = new Declaracion(Type.NUM, (String)id); :}
+| TIPO_BOOL IDEN:id PUNTOCOMA
+  {: RESULT = new Declaracion(Type.BOOL, (String)id); :}
+| TIPO_ENT IDEN:id CA Numero:n CC PUNTOCOMA
+  {: RESULT = new DeclaracionArray(Type.NUM, (String)id, Integer.parseInt(n)); :}
+| TIPO_BOOL IDEN:id CA Numero:n CC PUNTOCOMA
+  {: RESULT = new DeclaracionArray(Type.BOOL, (String)id, Integer.parseInt(n)); :}
+;
+
+Asig ::= PORFAVOR IDEN:id IGUAL Exp:e PUNTOCOMA
+  {: RESULT = new Asignacion((String)id, e); :}
+| PORFAVOR IDEN:id CA Exp:i CC IGUAL Exp:e PUNTOCOMA
+  {: RESULT = new AsignacionArray((String)id, i, e); :}
+| PORFAVOR IDEN:id IGUAL IF PA Exp:c PC Exp:e1 ELSE Exp:e2 PUNTOCOMA
+  {: RESULT = new AsignacionCondicional((String)id, c, e1, e2); :}
+;
+
+Cond ::= IF PA Exp:c PC Bloque:b
+  {: RESULT = new Condicional(c, b, null); :}
+| IF PA Exp:c PC Bloque:b1 ELSE Bloque:b2
+  {: RESULT = new Condicional(c, b1, b2); :}
+;
+
+Bucle ::= WHILE PA Exp:c PC Bloque:b
+  {: RESULT = new Bucle(c, b); :}
+;
+
+Exp ::= Exp:e1 MAS Exp:e2
+  {: RESULT = new EBin(BinOps.MAS, e1, e2); :}
+| Exp:e1 MENOS Exp:e2
+  {: RESULT = new EBin(BinOps.RESTA, e1, e2); :}
+| Exp:e1 MUL Exp:e2
+  {: RESULT = new EBin(BinOps.MULT, e1, e2); :}
+| Exp:e1 MAYOR Exp:e2
+  {: RESULT = new EBin(BinOps.MAYOR, e1, e2); :}
+| Exp:e1 MENOR Exp:e2
+  {: RESULT = new EBin(BinOps.MENOR, e1, e2); :}
+| Exp:e1 IGUALIGUAL Exp:e2
+  {: RESULT = new EBin(BinOps.IGUAL, e1, e2); :}
+| PA Exp:e PC
+  {: RESULT = e; :}
+| Numero:n
+  {: RESULT = new Num(n); :}
+| TRUE
+  {: RESULT = new BoolValue("true"); :}
+| FALSE
+  {: RESULT = new BoolValue("false"); :}
+| IDEN:id CA Exp:i CC
+  {: RESULT = new AccesoArray((String)id, i); :}
+| IDEN:id
+  {: RESULT = new Identificador((String)id); :}
+;
+
+Numero ::= ENT:n
+  {: RESULT = (String)n; :}
+| Numero:ns ENT:n
+  {: RESULT = ns + (String)n; :}
+;

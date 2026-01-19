@@ -1,0 +1,11 @@
+ent x;
+ent y;
+bool v[cinco];
+bool b;
+
+porfavor x = uno uno dos;
+porfavor y = dos;
+
+porfavor v[cero] = verdadero;
+porfavor b = (x == y);
+porfavor b = v[cero];

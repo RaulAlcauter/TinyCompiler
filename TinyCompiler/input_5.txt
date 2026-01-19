@@ -1,0 +1,24 @@
+ent x;
+ent y;
+bool b;
+
+porfavor x = uno;
+porfavor y = dos;
+
+porfavor b = (x == y);
+
+si (b) {
+  porfavor y = y + uno;
+} sino {
+  porfavor y = y + dos;
+}
+
+mientras (x < cinco) {
+  si (x == y) {
+    porfavor b = verdadero;
+  } sino {
+    porfavor b = falso;
+  }
+
+  porfavor x = x + uno;
+}
